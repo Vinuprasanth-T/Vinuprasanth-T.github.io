@@ -3,267 +3,871 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coming Soon | Something Epic</title>
+    <title>Eemonx | Cyber Security Solutions</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Montserrat:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* --- CSS STYLES --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        /* --- 1. CORE THEME CONFIG --- */
+        :root {
+            --bg-base: #050505;
+            --bg-gradient: #0f001e;
+            --text-white: #e0e0e0;
+            --text-muted: #888888;
+            --accent-primary: #8a2be2; /* Deep Purple */
+            --accent-neon: #bf00ff;   /* Neon Magenta */
+            --accent-cyan: #00f3ff;   /* Cyber Cyan for contrast */
+            --glass-bg: rgba(20, 20, 20, 0.6);
+            
+            --font-header: 'Cinzel', serif;
+            --font-body: 'Montserrat', sans-serif;
+            --font-code: 'Share Tech Mono', monospace;
         }
 
+        /* --- 2. GLOBAL RESET & BASICS --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        
+        html { scroll-behavior: smooth; }
+        
         body {
-            background-color: #050505; /* Deep Black */
-            color: #ffffff;
-            overflow: hidden; /* Prevents scrollbars during animation */
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            background-color: var(--bg-base);
+            color: var(--text-white);
+            font-family: var(--font-body);
+            overflow-x: hidden;
         }
 
-        /* The Canvas for Particles */
-        #particle-canvas {
+        body.locked { overflow: hidden; }
+
+        /* CRT Scanline Overlay */
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* --- 3. ENHANCED CROSSHAIR CURSOR --- */
+        #cursor {
+            position: fixed;
+            top: 0; left: 0;
+            width: 40px; height: 40px;
+            border: 2px solid var(--accent-cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 30000;
+            transition: transform 0.1s ease;
+            mix-blend-mode: normal;
+            box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
+        }
+
+        #cursor::before, #cursor::after {
+            content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1; /* Behind the content */
+            background: var(--accent-cyan);
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
         }
 
-        /* Main Content Container */
-        .container {
-            position: relative;
-            z-index: 10; /* Above the particles */
-            text-align: center;
-            padding: 2rem;
-            background: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
-            backdrop-filter: blur(5px); /* Glassmorphism effect */
-            border: 1px solid #330000;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.1);
-            max-width: 600px;
-            width: 90%;
+        #cursor::before { width: 50px; height: 2px; }
+        #cursor::after { width: 2px; height: 50px; }
+
+        #cursor.hovered {
+            transform: translate(-50%, -50%) scale(1.2) rotate(45deg);
+            border-color: var(--accent-neon);
+            box-shadow: 0 0 20px var(--accent-neon);
+        }
+        #cursor.hovered::before, #cursor.hovered::after {
+            background: var(--accent-neon);
         }
 
-        h1 {
-            font-size: 3.5rem;
+        #cursor-dot {
+            position: fixed;
+            top: 0; left: 0;
+            width: 6px; height: 6px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 30001;
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        /* --- 4. ANIMATED BACKGROUND --- */
+        #bg-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 50% 50%, var(--bg-gradient) 0%, var(--bg-base) 90%);
+        }
+
+        /* --- 5. NAVIGATION --- */
+        nav {
+            position: fixed;
+            top: 2rem; left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 1s, transform 1s;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 1rem 3rem;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            width: auto;
+            max-width: 95%;
+        }
+
+        nav.visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        nav ul { 
+            display: flex; gap: 2.5rem; list-style: none; align-items: center;
+        }
+
+        nav a {
+            color: var(--text-white);
+            text-decoration: none;
+            font-family: var(--font-body);
+            font-weight: 500;
+            font-size: 0.9rem;
             text-transform: uppercase;
-            letter-spacing: 5px;
-            margin-bottom: 10px;
-            color: #fff;
-            text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
-        }
-
-        .highlight {
-            color: #ff1f1f; /* Bright Neon Red */
-        }
-
-        p {
-            font-size: 1.2rem;
-            color: #ccc;
-            margin-bottom: 30px;
-            line-height: 1.6;
-        }
-
-        /* Input Field Styling */
-        .newsletter {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        input[type="email"] {
-            padding: 12px 20px;
-            border: 2px solid #333;
-            background: #111;
-            color: white;
-            border-radius: 5px;
-            font-size: 1rem;
-            outline: none;
+            letter-spacing: 1.5px;
             transition: 0.3s;
-            width: 60%;
+            position: relative;
+            opacity: 0.7;
         }
 
-        input[type="email"]:focus {
-            border-color: #ff1f1f;
-            box-shadow: 0 0 10px rgba(255, 31, 31, 0.3);
+        nav a:hover, nav a.active { 
+            opacity: 1; color: var(--accent-cyan); 
+            text-shadow: 0 0 15px rgba(0, 243, 255, 0.4);
+        }
+        
+        nav a::after {
+            content: ''; position: absolute; bottom: -5px; left: 50%;
+            width: 0; height: 2px; background: var(--accent-neon);
+            transform: translateX(-50%); transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--accent-neon);
         }
 
-        button {
-            padding: 12px 30px;
-            background: #ff1f1f;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
+        nav a:hover::after, nav a.active::after { width: 100%; }
+
+        /* --- 6. HOME & LOGO --- */
+        section {
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 6rem 2rem; position: relative;
+        }
+
+        #home { height: 100vh; }
+
+        #logo-container {
+            position: fixed; top: 45%; left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 50;
+            display: flex; align-items: center; justify-content: center;
+            white-space: nowrap;
+            pointer-events: none;
+            transition: all 1s ease;
+        }
+
+        #logo-container.scrollable { position: absolute; }
+
+        .name-part { display: flex; align-items: baseline; }
+
+        .initial {
+            font-family: var(--font-header);
+            font-size: 5.5rem;
+            color: var(--accent-primary);
+            text-shadow: 0 0 30px rgba(138, 43, 226, 0.4);
+            animation: zoomOutIntro 1.5s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+            position: relative;
+        }
+        
+        #logo-container:hover .initial {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--accent-neon);
+        }
+
+        .hidden-text {
+            font-family: var(--font-header);
+            font-size: 5.5rem;
+            max-width: 0; overflow: hidden; opacity: 0;
+            color: var(--text-white);
+            transition: max-width 1.5s ease, opacity 1s ease;
+        }
+        
+        .spacer { width: 0; transition: width 1s; }
+        #logo-container.expanded .hidden-text { max-width: 400px; opacity: 1; }
+        #logo-container.expanded .spacer { width: 40px; }
+
+        .hero-content {
+            position: absolute; top: 60%;
+            text-align: center; width: 100%;
+        }
+
+        .typewriter-text {
+            font-family: var(--font-code);
+            color: var(--accent-cyan);
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            display: block;
+            margin-bottom: 1rem;
+        }
+
+        .loop-text {
+            display: block;
+            font-family: var(--font-header);
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            letter-spacing: 4px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            transition: all 0.3s ease;
+            animation: textPulse 4s infinite alternate ease-in-out;
+            margin-top: 10px;
         }
 
-        button:hover {
-            background: #b30000;
+        /* --- 7. CARDS & GRID --- */
+        .section-title {
+            font-family: var(--font-header);
+            font-size: 2.5rem; margin-bottom: 3rem;
+            color: var(--text-white);
+            border-bottom: 2px solid var(--accent-primary);
+            padding-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        .grid-container {
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem; width: 100%; max-width: 1200px;
+            perspective: 1000px;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 2rem;
+            border-radius: 4px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        
+        .card-content { transform: translateZ(20px); width: 100%; display: flex; flex-direction: column; align-items: center;}
+
+        .card-photo-wrapper {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--accent-primary);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.3);
+            transition: 0.3s;
+        }
+
+        .card:hover .card-photo-wrapper {
+            border-color: var(--accent-neon);
+            box-shadow: 0 0 25px rgba(191, 0, 255, 0.5);
+            transform: scale(1.05);
+        }
+
+        .card-photo-wrapper img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
+        .card h3 { 
+            color: var(--accent-primary); margin-bottom: 0.5rem; 
+            font-family: var(--font-header); font-size: 1.4rem;
+        }
+        
+        .card h4 {
+            color: var(--accent-cyan); margin-bottom: 1rem;
+            font-family: var(--font-code); font-size: 0.9rem;
+        }
+        
+        .card p { color: var(--text-muted); line-height: 1.6; font-size: 0.9rem; }
+
+        /* --- 8. SKILLS & CONTACT --- */
+        .skills-grid { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; max-width: 900px; }
+        .skill-tag {
+            padding: 0.7rem 1.8rem;
+            border: 1px solid var(--accent-primary);
+            color: var(--text-white);
+            font-family: var(--font-code);
+            font-size: 0.9rem;
+            background: linear-gradient(45deg, rgba(138,43,226,0.1), transparent);
+            transition: 0.3s;
+        }
+        .skill-tag:hover {
+            background: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 0, 0, 0.4);
         }
 
-        /* Mobile Responsiveness */
-        @media (max-width: 768px) {
-            h1 { font-size: 2.5rem; }
-            input[type="email"] { width: 100%; }
-            button { width: 100%; }
+        .contact-container {
+            width: 100%; max-width: 900px;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 3rem;
+        }
+        
+        .contact-info h3 { color: var(--accent-cyan); font-family: var(--font-code); margin-bottom: 0.5rem; }
+        .contact-info p { color: var(--text-muted); margin-bottom: 0.5rem; font-family: var(--font-body); }
+        
+        .contact-directory { display: flex; flex-direction: column; gap: 1.5rem; }
+        .c-item { line-height: 1.6; }
+        
+        .contact-form { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .input-group { position: relative; }
+        .input-group input, .input-group textarea {
+            width: 100%; padding: 1rem;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white; font-family: var(--font-code);
+            border-radius: 2px; outline: none; transition: 0.3s;
+        }
+        .input-group input:focus, .input-group textarea:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 10px rgba(138,43,226,0.2);
+        }
+        
+        .btn-submit {
+            padding: 1rem; background: var(--accent-primary);
+            border: none; color: white;
+            font-family: var(--font-header); font-weight: bold;
+            letter-spacing: 2px; text-transform: uppercase;
+            transition: 0.3s;
+        }
+        .btn-submit:hover {
+            background: var(--accent-neon);
+            box-shadow: 0 0 20px var(--accent-neon);
+        }
+
+        /* --- 9. MODAL STYLES --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 20000;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal-overlay.active { opacity: 1; pointer-events: all; }
+
+        .modal-card {
+            background: var(--bg-base);
+            border: 1px solid var(--accent-primary);
+            width: 90%; max-width: 600px;
+            border-radius: 10px;
+            padding: 2rem;
+            position: relative;
+            transform: translateY(50px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 0 50px rgba(138, 43, 226, 0.2);
+            font-family: var(--font-body);
+        }
+
+        .modal-overlay.active .modal-card { transform: translateY(0); }
+
+        .modal-close {
+            position: absolute; top: 1rem; right: 1.5rem;
+            font-family: var(--font-code); font-size: 1.5rem;
+            color: var(--text-muted); transition: 0.3s;
+        }
+        .modal-close:hover { color: var(--accent-neon); transform: rotate(90deg); }
+
+        .modal-header { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1.5rem; }
+        
+        .modal-img {
+            width: 100px; height: 100px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--accent-cyan);
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.3);
+        }
+        
+        .modal-title h2 { color: var(--text-white); font-family: var(--font-header); font-size: 1.8rem; margin-bottom: 0.2rem; }
+        .modal-title p { color: var(--accent-primary); font-family: var(--font-code); }
+
+        .modal-body { color: var(--text-muted); }
+        
+        .info-row { display: flex; gap: 1rem; margin-bottom: 0.5rem; font-size: 0.95rem; align-items: center; }
+        .info-label { color: var(--text-white); font-weight: 600; min-width: 80px; }
+        
+        .modal-skills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.5rem 0; }
+        .modal-skill-pill {
+            background: rgba(255,255,255,0.05); padding: 0.3rem 0.8rem;
+            font-size: 0.8rem; border-radius: 20px; color: var(--accent-cyan);
+            font-family: var(--font-code);
+        }
+
+        .modal-socials { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .social-link {
+            color: var(--text-white); text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem; border-radius: 4px;
+            font-size: 0.85rem; transition: 0.3s;
+        }
+        .social-link:hover {
+            border-color: var(--accent-neon); color: var(--accent-neon);
+            box-shadow: 0 0 10px rgba(191, 0, 255, 0.2);
+        }
+
+        /* --- 10. KEYFRAMES --- */
+        @keyframes zoomOutIntro {
+            0% { transform: scale(10); opacity: 0; filter: blur(20px); }
+            100% { transform: scale(1); opacity: 1; filter: blur(0); }
+        }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        @keyframes textPulse {
+            0% { opacity: 0.4; text-shadow: 0 0 0 var(--accent-primary); }
+            100% { opacity: 1; text-shadow: 0 0 10px var(--accent-primary), 0 0 20px var(--accent-primary); }
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .initial, .hidden-text { font-size: 3rem; }
+            #logo-container.expanded .hidden-text { max-width: 200px; }
+            nav { top: auto; bottom: 1rem; width: 90%; padding: 1rem; justify-content: center; transform: translateX(-50%) translateY(100px); }
+            nav.visible { transform: translateX(-50%) translateY(0); }
+            nav ul { gap: 1rem; font-size: 0.75rem; flex-wrap: wrap; justify-content: center; }
+            .contact-container { grid-template-columns: 1fr; }
+            #cursor, #cursor-dot { display: none; }
+            * { cursor: auto; }
+            .modal-header { flex-direction: column; text-align: center; }
         }
     </style>
 </head>
-<body>
+<body class="locked">
 
-    <canvas id="particle-canvas"></canvas>
+    <div class="scanlines"></div>
+    <div id="cursor"></div>
+    <div id="cursor-dot"></div>
+    <canvas id="bg-canvas"></canvas>
 
-    <div class="container">
-        <h1>Coming <span class="highlight">Soon</span></h1>
-        <p>We are building something extraordinary. Enter your email to get notified when we go live.</p>
-        
-        <div class="newsletter">
-            <input type="email" placeholder="Enter your email address">
-            <button>Notify Me</button>
+    <nav id="navbar">
+        <ul>
+            <li><a href="#home" class="active">Home</a></li>
+            <li><a href="#identity">Identity</a></li>
+            <li><a href="#arsenal">Arsenal</a></li>
+            <li><a href="#board">Board</a></li>
+            <li><a href="#products">Products</a></li>
+            <li><a href="#contact">Contact Us</a></li>
+        </ul>
+    </nav>
+
+    <section id="home">
+        <div id="logo-container">
+            <div class="name-part">
+                <span class="initial">E</span>
+                <span class="hidden-text">EMON</span>
+            </div>
+            <div class="spacer"></div>
+            <div class="name-part">
+                <span class="initial">X</span>
+            </div>
+        </div>
+
+        <div class="hero-content">
+            <span id="typewriter" class="typewriter-text"></span>
+            <span class="loop-text">"the best defend against the cyber threats"</span>
+        </div>
+    </section>
+
+    <section id="identity">
+        <h2 class="section-title">Corporate Identity</h2>
+        <p style="max-width: 750px; text-align: center; line-height: 1.8; color: var(--text-muted); font-family: var(--font-code); font-size: 1.05rem;">
+            <strong style="color:white; font-size: 1.2rem;">Eemonx</strong> is a vanguard Cyber Security Company. We are the architects of digital safety, bridging the gap between offensive security and resilient defense. From advanced <span style="color:var(--accent-cyan)">penetration testing</span> to bespoke <span style="color:var(--accent-cyan)">UI/UX solutions</span>, we engineer the future of secure technology.
+        </p>
+    </section>
+
+    <section id="arsenal">
+        <h2 class="section-title">Technical Arsenal</h2>
+        <div class="skills-grid">
+            <div class="skill-tag">Cyber Solutions</div>
+            <div class="skill-tag">UI/UX Design</div>
+            <div class="skill-tag">Designer</div>
+            <div class="skill-tag">Prompt Engineer</div>
+            <div class="skill-tag">PC Build Expert</div>
+            <div class="skill-tag">Network Security</div>
+            <div class="skill-tag">Python Automation</div>
+            <div class="skill-tag">React.js</div>
+            <div class="skill-tag">System Hardening</div>
+        </div>
+    </section>
+
+    <section id="board">
+        <h2 class="section-title">Board Members</h2>
+        <div class="grid-container">
+            <div class="card interactive-card" onclick="openModal(0)">
+                <div class="card-content">
+                    <div class="card-photo-wrapper">
+                        <img src="./images/praveen.jpg" alt="Praveen Kumar R">
+                    </div>
+                    <h3>Praveen Kumar R</h3>
+                    <h4>Founder</h4>
+                    <p>Visionary leader in cyber defense strategies and corporate resilience.</p>
+                </div>
+            </div>
+            <div class="card interactive-card" onclick="openModal(1)">
+                <div class="card-content">
+                    <div class="card-photo-wrapper">
+                         <img src="./images/vinuprasanth.jpg" alt="Vinuprasanth T">
+                    </div>
+                    <h3>Vinuprasanth T</h3>
+                    <h4>CEO</h4>
+                    <p>Expert in full-stack architecture and secure system integration.</p>
+                </div>
+            </div>
+            <div class="card interactive-card" onclick="openModal(2)">
+                <div class="card-content">
+                    <div class="card-photo-wrapper">
+                         <img src="./images/kishore.jpg" alt="Kishore A">
+                    </div>
+                    <h3>Kishore A</h3>
+                    <h4>Co-Founder</h4>
+                    <p>Specializes in offensive security operations and red teaming.</p>
+                </div>
+            </div>
+             <div class="card interactive-card" onclick="openModal(3)">
+                <div class="card-content">
+                    <div class="card-photo-wrapper">
+                         <img src="./images/yogesh.jpg" alt="Yogesh S V">
+                    </div>
+                    <h3>Yogesh S V</h3>
+                    <h4>Director</h4>
+                    <p>Operational oversight and strategic hardware implementations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="products">
+        <h2 class="section-title">Our Products</h2>
+        <div class="grid-container">
+            <div class="card interactive-card">
+                <div class="card-content">
+                    <h3 style="color:var(--accent-cyan)">Network Analyzer</h3>
+                    <p>Enterprise-grade traffic monitoring and anomaly detection software.</p>
+                </div>
+            </div>
+            <div class="card interactive-card">
+                <div class="card-content">
+                    <h3 style="color:var(--accent-cyan)">Figma UI Kits</h3>
+                    <p>Cyber-themed design systems and component libraries for rapid prototyping.</p>
+                </div>
+            </div>
+            <div class="card interactive-card">
+                <div class="card-content">
+                    <h3 style="color:var(--accent-cyan)">Website UI Design</h3>
+                    <p>Custom, secure, and responsive web interfaces tailored for tech startups.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact">
+        <h2 class="section-title">Contact Us</h2>
+        <div class="contact-container">
+            <div class="contact-info">
+                <h3>Eemonx HQ</h3>
+                <p>Nandha Engineering College,</p>
+                <p>Erode.</p>
+                
+                <h3 style="margin-top: 2rem; margin-bottom: 1rem;">Command Center</h3>
+                
+                <div class="contact-directory" style="font-family: var(--font-code); font-size: 0.85rem;">
+                    
+                    <div class="c-item">
+                        <strong style="color: var(--text-white);">Praveen Kumar R</strong> <span style="color: var(--accent-primary);">[Founder]</span><br>
+                        <span style="color: var(--text-muted);">pklovetoracer@gmail.com</span> | <span style="color: var(--accent-cyan);">9345883673</span>
+                    </div>
+
+                    <div class="c-item">
+                        <strong style="color: var(--text-white);">Vinuprasanth T</strong> <span style="color: var(--accent-primary);">[CEO]</span><br>
+                        <span style="color: var(--text-muted);">lightningdragon6723@gmail.com</span> | <span style="color: var(--accent-cyan);">9344936502</span>
+                    </div>
+
+                    <div class="c-item">
+                        <strong style="color: var(--text-white);">Kishore A</strong> <span style="color: var(--accent-primary);">[Co-Founder]</span><br>
+                        <span style="color: var(--text-muted);">kishoremonika87@gmail.com</span> | <span style="color: var(--accent-cyan);">9486802976</span>
+                    </div>
+
+                    <div class="c-item">
+                        <strong style="color: var(--text-white);">Yogesh S V</strong> <span style="color: var(--accent-primary);">[Director]</span><br>
+                        <span style="color: var(--text-muted);">vpys2005ys@gmail.com</span> | <span style="color: var(--accent-cyan);">9384413599</span>
+                    </div>
+
+                    <div class="c-item" style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.5rem;">
+                        <strong style="color: var(--text-white);">Company Official</strong><br>
+                        <span style="color: var(--accent-neon);">eemonx2025@gmail.com</span>
+                    </div>
+
+                </div>
+            </div>
+
+            <form class="contact-form" action="#" onsubmit="event.preventDefault(); alert('Transmission Sent.');">
+                <div class="input-group">
+                    <input type="text" placeholder="Codename" required>
+                </div>
+                <div class="input-group">
+                    <input type="email" placeholder="Secure Email" required>
+                </div>
+                <div class="input-group">
+                    <textarea rows="4" placeholder="Message Payload..." required></textarea>
+                </div>
+                <button class="btn-submit">Send Transmission</button>
+            </form>
+        </div>
+    </section>
+
+    <div id="modal-overlay" class="modal-overlay" onclick="closeModal()">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeModal()">✕</div>
+            
+            <div class="modal-header">
+                <img src="" alt="Profile" id="m-img" class="modal-img">
+                <div class="modal-title">
+                    <h2 id="m-name">Name</h2>
+                    <p id="m-role">Role</p>
+                </div>
+            </div>
+
+            <div class="modal-body">
+                <div class="info-row">
+                    <span class="info-label">Email:</span>
+                    <span id="m-email">email@test.com</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone:</span>
+                    <span id="m-phone">+1 234 567 890</span>
+                </div>
+
+                <div class="modal-skills" id="m-skills">
+                    </div>
+
+                <div class="modal-socials" id="m-socials">
+                    </div>
+            </div>
         </div>
     </div>
 
     <script>
-        /* --- JAVASCRIPT PARTICLES --- */
-        const canvas = document.getElementById('particle-canvas');
+        // --- 1. BOARD MEMBERS DATA (UPDATED WITH LOCAL IMAGE PATHS) ---
+        const boardMembers = [
+            {
+                name: "Praveen Kumar R",
+                role: "Founder",
+                img: "./images/praveen.jpg", // LOCAL PATH
+                email: "pklovetoracer@gmail.com",
+                phone: "9345883673",
+                skills: ["Strategic Planning", "Leadership", "Core Architecture"],
+                socials: { linkedin: "#", github: "#", instagram: "#", portfolio: "#" }
+            },
+            {
+                name: "Vinuprasanth T",
+                role: "CEO",
+                img: "./images/vinuprasanth.jpg", // LOCAL PATH
+                email: "lightningdragon6723@gmail.com",
+                phone: "9344936502",
+                skills: ["Executive Management", "Tech Integration", "Cloud Security"],
+                socials: { linkedin: "#", github: "#", instagram: "#", portfolio: "#" }
+            },
+            {
+                name: "Kishore A",
+                role: "Co-Founder",
+                img: "./images/kishore.jpg", // LOCAL PATH
+                email: "kishoremonika87@gmail.com",
+                phone: "9486802976",
+                skills: ["Operations", "Security Auditing", "Development"],
+                socials: { linkedin: "#", github: "#", instagram: "#", portfolio: "#" }
+            },
+            {
+                name: "Yogesh S V",
+                role: "Director",
+                img: "./images/yogesh.jpg", // LOCAL PATH
+                email: "vpys2005ys@gmail.com",
+                phone: "9384413599",
+                skills: ["System Administration", "Network Infrastructure", "Compliance"],
+                socials: { linkedin: "#", github: "#", instagram: "#", portfolio: "#" }
+            }
+        ];
+
+        // --- 2. MODAL LOGIC ---
+        const modal = document.getElementById('modal-overlay');
+        const mName = document.getElementById('m-name');
+        const mRole = document.getElementById('m-role');
+        const mImg = document.getElementById('m-img');
+        const mEmail = document.getElementById('m-email');
+        const mPhone = document.getElementById('m-phone');
+        const mSkills = document.getElementById('m-skills');
+        const mSocials = document.getElementById('m-socials');
+
+        function openModal(index) {
+            const member = boardMembers[index];
+            
+            // Populate Data
+            mName.innerText = member.name;
+            mRole.innerText = member.role;
+            mImg.src = member.img;
+            mEmail.innerText = member.email;
+            mPhone.innerText = member.phone;
+
+            // Populate Skills
+            mSkills.innerHTML = member.skills.map(skill => 
+                `<span class="modal-skill-pill">${skill}</span>`
+            ).join('');
+
+            // Populate Socials
+            mSocials.innerHTML = `
+                <a href="${member.socials.instagram}" class="social-link">Instagram</a>
+                <a href="${member.socials.github}" class="social-link">GitHub</a>
+                <a href="${member.socials.linkedin}" class="social-link">LinkedIn</a>
+                <a href="${member.socials.portfolio}" class="social-link">Portfolio</a>
+            `;
+
+            // Show Modal
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; 
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        // --- 3. SYSTEM INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const logo = document.getElementById('logo-container');
+            const nav = document.getElementById('navbar');
+            const body = document.body;
+            
+            setTimeout(() => { logo.classList.add('expanded'); }, 1000);
+            setTimeout(() => {
+                logo.classList.add('scrollable');
+                nav.classList.add('visible');
+                body.classList.remove('locked');
+                startTypewriter(); 
+            }, 3000);
+        });
+
+        // --- 4. TYPEWRITER EFFECT ---
+        const textToType = "Cyber Security | Design | Development";
+        const typeContainer = document.getElementById('typewriter');
+        let typeIndex = 0;
+
+        function startTypewriter() {
+            if (typeIndex < textToType.length) {
+                typeContainer.innerHTML += textToType.charAt(typeIndex);
+                typeIndex++;
+                setTimeout(startTypewriter, 50); 
+            } else {
+                typeContainer.innerHTML += '<span class="cursor-blink">_</span>';
+            }
+        }
+
+        // --- 5. CUSTOM CURSOR LOGIC ---
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursor-dot');
+        const hoverTargets = document.querySelectorAll('a, .card, .skill-tag, button, input, textarea, .social-link, .modal-close');
+
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+            cursorDot.style.left = e.clientX + 'px';
+            cursorDot.style.top = e.clientY + 'px';
+        });
+
+        document.addEventListener('mouseover', (e) => {
+            if(e.target.matches('a, .card, .skill-tag, button, input, textarea, .social-link, .modal-close, .modal-overlay')) {
+                cursor.classList.add('hovered');
+            } else {
+                cursor.classList.remove('hovered');
+            }
+        });
+
+        // --- 6. 3D TILT EFFECT ---
+        const cards = document.querySelectorAll('.interactive-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+                card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0)';
+            });
+        });
+
+        // --- 7. PARTICLES SYSTEM ---
+        const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
-
         let particlesArray;
-
-        // Set canvas size
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Handle Window Resize
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            init();
-        });
-
-        // Mouse Interactions
-        const mouse = {
-            x: null,
-            y: null,
-            radius: 150 // Radius of interaction
-        }
-
-        window.addEventListener('mousemove', (event) => {
-            mouse.x = event.x;
-            mouse.y = event.y;
-        });
-
-        // Particle Class
         class Particle {
-            constructor(x, y, directionX, directionY, size, color) {
-                this.x = x;
-                this.y = y;
-                this.directionX = directionX;
-                this.directionY = directionY;
-                this.size = size;
-                this.color = color;
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.directionX = (Math.random() * 0.4) - 0.2;
+                this.directionY = (Math.random() * 0.4) - 0.2;
+                this.size = Math.random() * 2;
+                this.color = '#8a2be2';
             }
-
-            // Draw individual particle
             draw() {
                 ctx.beginPath();
                 ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
-                ctx.fillStyle = '#ff1f1f'; // Red particles
+                ctx.fillStyle = this.color;
                 ctx.fill();
             }
-
-            // Update particle position
             update() {
-                // Check if particle is still within canvas
-                if (this.x > canvas.width || this.x < 0) {
-                    this.directionX = -this.directionX;
-                }
-                if (this.y > canvas.height || this.y < 0) {
-                    this.directionY = -this.directionY;
-                }
-
-                // Collision detection with mouse
-                let dx = mouse.x - this.x;
-                let dy = mouse.y - this.y;
-                let distance = Math.sqrt(dx*dx + dy*dy);
-                
-                if (distance < mouse.radius + this.size) {
-                    if (mouse.x < this.x && this.x < canvas.width - this.size * 10) {
-                        this.x += 10;
-                    }
-                    if (mouse.x > this.x && this.x > this.size * 10) {
-                        this.x -= 10;
-                    }
-                    if (mouse.y < this.y && this.y < canvas.height - this.size * 10) {
-                        this.y += 10;
-                    }
-                    if (mouse.y > this.y && this.y > this.size * 10) {
-                        this.y -= 10;
-                    }
-                }
-
-                // Move particle
+                if (this.x > canvas.width || this.x < 0) this.directionX = -this.directionX;
+                if (this.y > canvas.height || this.y < 0) this.directionY = -this.directionY;
                 this.x += this.directionX;
                 this.y += this.directionY;
-                
                 this.draw();
             }
         }
-
-        // Create Particle Array
         function init() {
             particlesArray = [];
-            let numberOfParticles = (canvas.height * canvas.width) / 9000; // Adjust density here
-
+            let numberOfParticles = (canvas.height * canvas.width) / 15000; 
             for (let i = 0; i < numberOfParticles; i++) {
-                let size = (Math.random() * 3) + 1;
-                let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
-                let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
-                let directionX = (Math.random() * 2) - 1; // Speed X
-                let directionY = (Math.random() * 2) - 1; // Speed Y
-                let color = '#ff1f1f';
-
-                particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+                particlesArray.push(new Particle());
             }
         }
-
-        // Animation Loop
         function animate() {
             requestAnimationFrame(animate);
             ctx.clearRect(0, 0, innerWidth, innerHeight);
-
             for (let i = 0; i < particlesArray.length; i++) {
                 particlesArray[i].update();
             }
             connect();
         }
-
-        // Draw lines between particles (Constellation effect)
         function connect() {
-            let opacityValue = 1;
             for (let a = 0; a < particlesArray.length; a++) {
                 for (let b = a; b < particlesArray.length; b++) {
-                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x))
-                                 + ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
-                    
-                    // If particles are close enough, draw a line
+                    let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                                   ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
                     if (distance < (canvas.width/7) * (canvas.height/7)) {
-                        opacityValue = 1 - (distance / 20000);
-                        ctx.strokeStyle = 'rgba(255, 31, 31,' + opacityValue + ')'; // Red lines
+                        let opacityValue = 1 - (distance / 20000);
+                        ctx.strokeStyle = 'rgba(138, 43, 226,' + opacityValue + ')';
                         ctx.lineWidth = 1;
                         ctx.beginPath();
                         ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
@@ -273,9 +877,13 @@
                 }
             }
         }
-
         init();
         animate();
+        window.addEventListener('resize', () => {
+            canvas.width = innerWidth;
+            canvas.height = innerHeight;
+            init();
+        });
     </script>
 </body>
 </html>
